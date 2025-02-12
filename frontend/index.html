@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Podcast Summarizer & Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>🎙️ AI Podcast Summarizer & Search</h1>
+    </header>
+
+    <main>
+        <!-- Podcast Upload Section -->
+        <section id="upload-section">
+            <h2>Upload Your Podcast</h2>
+            <input type="file" id="podcastUpload" accept="audio/*">
+            <button onclick="uploadPodcast()">Upload & Transcribe</button>
+        </section>
+
+        <!-- Search Bar -->
+        <section id="search-section">
+            <h2>Search Podcast Summaries</h2>
+            <input type="text" id="searchInput" placeholder="Search by keyword..." onkeyup="searchSummaries()">
+        </section>
+
+        <!-- Summarized Podcast Results -->
+        <section id="results-section">
+            <h2>Podcast Summaries</h2>
+            <div id="results-container">
+                <!-- AI-generated summaries will be dynamically added here -->
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
