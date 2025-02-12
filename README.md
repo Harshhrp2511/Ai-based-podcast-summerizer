@@ -1,1 +1,1 @@
-# Ai-based-podcast-summerizer
+# Ai-based-podcast-summarizer
