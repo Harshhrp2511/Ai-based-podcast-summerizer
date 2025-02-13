@@ -4,21 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Podcast Summarizer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="static/styles.css"> <!-- Link to CSS -->
 </head>
 <body>
-    <h1>🎙 AI-Based Podcast Summarizer</h1>
+    <div class="container">
+        <h1>Podcast Summarizer</h1>
 
-    <h2>Upload Podcast</h2>
-    <input type="file" id="uploadInput">
-    <button onclick="uploadPodcast()">Upload & Summarize</button>
-    <p id="uploadStatus"></p>
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <input type="file" id="uploadInput">
+            <button id="uploadBtn">Upload</button>
+            <p id="uploadStatus"></p>
+        </div>
 
-    <h2>🔍 Search Summaries</h2>
-    <input type="text" id="searchInput" placeholder="Search topics...">
-    <button onclick="searchPodcast()">Search</button>
-    <ul id="results"></ul>
+        <!-- Search Section -->
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="Search podcasts">
+            <button id="searchBtn">Search</button>
+        </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+        <ul id="results"></ul>
+    </div>
+
+    <script src="static/script.js"></script> <!-- Link to JavaScript -->
 </body>
 </html>

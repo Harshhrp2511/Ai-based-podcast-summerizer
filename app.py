@@ -1,95 +1,62 @@
 from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
 import openai
 import os
-import whisper
-import json
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
+
+# Initialize Flask app
 app = Flask(__name__)
-CORS(app)
 
-# OpenAI API key (store in .env for security)
-OPENAI_API_KEY = "your_openai_api_key_here"
-openai.api_key = OPENAI_API_KEY
+# Ensure OpenAI API key is set
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("Missing OPENAI_API_KEY. Check your .env file.")
 
-# Initialize Whisper model
-model = whisper.load_model("base")
+# Initialize OpenAI client correctly for v1.0.0+
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-UPLOAD_FOLDER = "uploads"
-DATA_FILE = "data.json"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-
-# 🟢 Route: Render UI
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
-# 🟢 Route: Upload & Transcribe Podcast
 @app.route("/upload", methods=["POST"])
 def upload_podcast():
     if "podcast" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["podcast"]
-    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(filepath)
+    title = file.filename
 
-    # Transcribe using Whisper
-    transcription = model.transcribe(filepath)
-    transcript_text = transcription["text"]
+    # Dummy summary generation
+    summary = generate_summary(f"Transcript of {title}")
 
-    # Generate Summary using GPT
-    prompt = f"Summarize this podcast: {transcript_text}"
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": prompt}],
-        max_tokens=200
-    )
-    summary = response["choices"][0]["message"]["content"]
+    return jsonify({"title": title, "summary": summary})
 
-    # Store in JSON file
-    podcast_data = {"title": file.filename, "transcript": transcript_text, "summary": summary}
-    save_data(podcast_data)
-
-    return jsonify({"title": file.filename, "summary": summary})
-
-
-# 🟢 Route: Search Summaries
 @app.route("/search", methods=["GET"])
-def search_podcasts():
-    query = request.args.get("query", "").lower()
-    data = load_data()
+def search_podcast():
+    query = request.args.get("query", "")
 
-    results = [entry for entry in data if query in entry["summary"].lower()]
-    return jsonify(results)
+    # Dummy data
+    results = [
+        {"title": "Podcast 1", "summary": "This is a summary."},
+        {"title": "Podcast 2", "summary": "Another summary."},
+    ]
 
+    filtered_results = [r for r in results if query.lower() in r["title"].lower()]
+    return jsonify(filtered_results)
 
-# 📝 Save Data to JSON File
-def save_data(new_entry):
+def generate_summary(text):
+    """Generate a summary using OpenAI API (Updated for API v1.0.0+)"""
     try:
-        with open(DATA_FILE, "r") as file:
-            data = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = []
-
-    data.append(new_entry)
-
-    with open(DATA_FILE, "w") as file:
-        json.dump(data, file, indent=4)
-
-
-# 📂 Load Data from JSON File
-def load_data():
-    try:
-        with open(DATA_FILE, "r") as file:
-            return json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": f"Summarize this podcast: {text}"}]
+        )
+        return response.choices[0].message.content.strip()  # Ensure clean output
+    except Exception as e:
+        return f"Error generating summary: {str(e)}"
 
 if __name__ == "__main__":
     app.run(debug=True)
