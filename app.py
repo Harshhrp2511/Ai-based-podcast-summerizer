@@ -1,21 +1,18 @@
 from flask import Flask, request, jsonify, render_template
-import openai
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-
-# Initialize Flask app
 app = Flask(__name__)
 
-# Ensure OpenAI API key is set
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("Missing OPENAI_API_KEY. Check your .env file.")
+# Load Gemma 2B Model
+MODEL_NAME = "google/gemma-2b"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Initialize OpenAI client correctly for v1.0.0+
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+print(f"Loading {MODEL_NAME} on {device}...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME).to(device)
+print("Model loaded successfully!")
 
 @app.route("/")
 def index():
@@ -29,8 +26,11 @@ def upload_podcast():
     file = request.files["podcast"]
     title = file.filename
 
-    # Dummy summary generation
-    summary = generate_summary(f"Transcript of {title}")
+    # Dummy transcript (replace with real transcription logic)
+    transcript = f"This is the transcript of {title}"
+
+    # Generate summary using Gemma 2B
+    summary = generate_summary(transcript)
 
     return jsonify({"title": title, "summary": summary})
 
@@ -48,13 +48,16 @@ def search_podcast():
     return jsonify(filtered_results)
 
 def generate_summary(text):
-    """Generate a summary using OpenAI API (Updated for API v1.0.0+)"""
+    """Generate a summary using Gemma 2B"""
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": f"Summarize this podcast: {text}"}]
-        )
-        return response.choices[0].message.content.strip()  # Ensure clean output
+        input_text = f"Summarize this podcast transcript: {text}"
+        inputs = tokenizer(input_text, return_tensors="pt").to(device)
+
+        with torch.no_grad():
+            outputs = model.generate(**inputs, max_length=100)
+
+        summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return summary
     except Exception as e:
         return f"Error generating summary: {str(e)}"
 
